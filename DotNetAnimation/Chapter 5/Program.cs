@@ -182,7 +182,7 @@ namespace Chapter_4
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.Clear(Color.White);
 
-                HatchBrush hatchBrush = new HatchBrush(HatchStyle.Cross, Color.Black, Color.LightGray);
+                HatchBrush hatchBrush = new HatchBrush(HatchStyle.Cross, Color.Black,Color.LightGray);
                 g.FillRectangle(hatchBrush, new Rectangle(50, 50, 100, 100));
                 bmp.Save("hatchBrush.png");
             }

@@ -118,7 +118,7 @@ namespace Chapter_7_WPF
                 Math.Sin(angle * Math.PI / 180) * yRadius;
 
             ArcSegment arcSegment =
-                new ArcSegment(new Point(x, y), 
+                new ArcSegment(new Point(x, y),
                 size, 0, false, SweepDirection.Clockwise, 
                 true);
 

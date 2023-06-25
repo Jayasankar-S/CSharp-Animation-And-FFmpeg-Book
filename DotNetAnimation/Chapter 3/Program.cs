@@ -10,42 +10,54 @@ namespace Chapter_2
         static void Main(string[] args)
         {
 
-            Bitmap bmp = new Bitmap(1920, 1080);
-            Graphics g = Graphics.FromImage(bmp);
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.InterpolationMode =
-                InterpolationMode.HighQualityBicubic;
-
-            int startX = 0;
-            int startY = 340;
-            int xIncrement = 10;
-
             if (!Directory.Exists("ImageOutput"))
                 Directory.CreateDirectory("ImageOutput");
+
+            FileInfo[] files = new DirectoryInfo("ImageOutput").GetFiles();
+            for (int i = 0; i < files.Length; i++)
+                files[i].Delete();
 
             if (!Directory.Exists("VideoOutput"))
                 Directory.CreateDirectory("VideoOutput");
 
-            for (int i = 0; i < 125; i++)
+            files = new DirectoryInfo("VideoOutput").GetFiles();
+            for (int i = 0; i < files.Length; i++)
+                files[i].Delete();
+
+
             {
-                g.Clear(Color.White);
-                g.FillEllipse(Brushes.Gray,
-                    new Rectangle(startX, startY, 400, 400));
-                string imageName = "000000000" + i;
+                Bitmap bmp = new Bitmap(1920, 1080);
+                Graphics g = Graphics.FromImage(bmp);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode =
+                    InterpolationMode.HighQualityBicubic;
 
-                imageName =
-                    imageName.Substring(imageName.Length - 6, 6);
+                int startX = 0;
+                int startY = 340;
+                int xIncrement = 10;
 
-                bmp.Save("ImageOutput\\" + imageName + ".png");
-                Console.WriteLine("Created image " + imageName);
-                startX = startX + xIncrement;
+
+                for (int i = 0; i < 125; i++)
+                {
+                    g.Clear(Color.White);
+                    g.FillEllipse(Brushes.Gray,
+                        new Rectangle(startX, startY, 400, 400));
+                    string imageName = "000000000" + i;
+
+                    imageName =
+                        imageName.Substring(imageName.Length - 6, 6);
+
+                    bmp.Save("ImageOutput\\" + imageName + ".png");
+                    Console.WriteLine("Created image " + imageName);
+                    startX = startX + xIncrement;
+                }
             }
-             
-            CreateVideoFromImages(
+
+            CreateVideoFromImages(30,
                 Path.GetFullPath("ImageOutput\\"),
                 Path.GetFullPath("VideoOutput\\CircleMovingRight.mp4"));
 
-            CreateVideoFromImages(
+            CreateVideoFromImages(30,
                 Path.GetFullPath("ImageOutput\\"),
                 Path.GetFullPath("VideoOutput\\CircleMovingRight2.mp4"));
 
@@ -106,10 +118,68 @@ namespace Chapter_2
             "VideoOutput\\CircleMovingRight.mp4",
             "VideoOutput\\CircleMovingRight.mpeg");
 
+            ConvertFromMp4ToMkv(
+            "VideoOutput\\CircleMovingRight.mp4",
+            "VideoOutput\\CircleMovingRight.mkv");
 
+            RotateVideo90(
+           "VideoOutput\\CircleMovingRight.mp4",
+           "VideoOutput\\CircleMovingRight90.mp4");
+
+            ResizeVideo(
+            "VideoOutput\\CircleMovingRight.mp4",
+            "VideoOutput\\ChangeSize.mp4",300,500);
+
+            ChangeAspectRatio(
+            "VideoOutput\\CircleMovingRight.mp4" ,
+            "VideoOutput\\ChangeAspectRatio.mp4");
+
+            CreateSilence("VideoOutput\\silence.mp4", 20);
+
+            files = new DirectoryInfo("ImageOutput").GetFiles();
+            for (int i = 0; i < files.Length; i++)
+                files[i].Delete();
+
+            if (!Directory.Exists("VideoOutput"))
+                Directory.CreateDirectory("VideoOutput");
+
+           
+
+
+            {
+                Bitmap bmp = new Bitmap(3840, 2160);
+                Graphics g = Graphics.FromImage(bmp);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode =
+                    InterpolationMode.HighQualityBicubic;
+
+                int startX = 0;
+                int startY = 1080;
+                int xIncrement = 10;
+
+
+                for (int i = 0; i < 100; i++)
+                {
+                    g.Clear(Color.White);
+                    g.FillEllipse(Brushes.Gray,
+                        new Rectangle(startX, startY, 400, 400));
+                    string imageName = "000000000" + i;
+
+                    imageName =
+                        imageName.Substring(imageName.Length - 6, 6);
+
+                    bmp.Save("ImageOutput\\" + imageName + ".png");
+                    Console.WriteLine("Created image " + imageName);
+                    startX = startX + xIncrement;
+                }
+            }
+
+            Create4KVideoFromImages(33,
+               Path.GetFullPath("ImageOutput\\"),
+               Path.GetFullPath("VideoOutput\\CircleMovingRight4k.mp4"));
         }
 
-        public static void CreateVideoFromImages(
+        public static void CreateVideoFromImages(int frameRate,
             string inputImagesfolder,
             string videoOutputFile)
         {
@@ -117,7 +187,7 @@ namespace Chapter_2
             process.StartInfo.FileName = "cmd.exe";
             process.StartInfo.Arguments = "/C " + " ffmpeg -i  \"" +
                 inputImagesfolder +
-                 "%06d.png\" -y -pix_fmt yuv420p  \""
+                 "%06d.png\" -r "+ frameRate + " -y -pix_fmt yuv420p  \""
                  + videoOutputFile + "\" "; ;
 
             process.StartInfo.UseShellExecute = false;
@@ -137,7 +207,39 @@ namespace Chapter_2
             }
         }
 
-      
+
+        public static void Create4KVideoFromImages(int frameRate,
+           string inputImagesfolder,
+           string videoOutputFile)
+        {
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/C " + " ffmpeg -i  \"" +
+                inputImagesfolder +
+                 "%06d.png\"  -r "+ frameRate + 
+                 " -y -pattern_type glob "+
+                 " -s 3840x2160 "+
+                 "-c:v libx264 -preset slow "+
+                 " -crf 18 \""
+                + videoOutputFile + "\" ";
+
+
+            process.StartInfo.UseShellExecute = false;
+            process.Start();
+            process.WaitForExit();
+
+            int exitCode = process.ExitCode;
+            if (exitCode == 0)
+            {
+                Console.WriteLine("Creating Video From" +
+                    " Images completed successfully!");
+            }
+            else
+            {
+                Console.WriteLine($"FFmpeg processing " +
+                    $"failed with exit code: {exitCode}");
+            }
+        }
 
         public static void ConvertFromMp4ToMpeg1(
             string inputVideoFilePath, 
@@ -168,6 +270,34 @@ namespace Chapter_2
             }
         }
 
+        public static void ConvertFromMp4ToMkv(
+            string inputVideoFilePath,
+            string outputVideoFilePath)
+        {
+
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/C " + " ffmpeg  -y -i " +
+                inputVideoFilePath +
+                 " -codec:v libx264 -codec:a libmp3lame  " +
+                outputVideoFilePath;
+
+            process.StartInfo.UseShellExecute = false;
+            process.Start();
+            process.WaitForExit();
+
+            int exitCode = process.ExitCode;
+            if (exitCode == 0)
+            {
+                Console.WriteLine("Creating Video From" +
+                    " Images completed successfully!");
+            }
+            else
+            {
+                Console.WriteLine($"FFmpeg processing " +
+                    $"failed with exit code: {exitCode}");
+            }
+        }
 
         public static void MergeVideo(
             string inputVideoFilePath1, 
@@ -365,6 +495,95 @@ namespace Chapter_2
             }
         }
 
+        public static void RotateVideo90(
+          string inputVideoFilePath,
+          string outputVideoFilePath)
+        {
+
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/C " + " ffmpeg  -y -i " +
+                inputVideoFilePath +
+                " -filter:v \"rotate=45\"  " +
+                outputVideoFilePath;
+
+            process.StartInfo.UseShellExecute = false;
+            process.Start();
+            process.WaitForExit();
+
+            int exitCode = process.ExitCode;
+            if (exitCode == 0)
+            {
+                Console.WriteLine("Creating Video From" +
+                    " Images completed successfully!");
+            }
+            else
+            {
+                Console.WriteLine($"FFmpeg processing " +
+                    $"failed with exit code: {exitCode}");
+            }
+        }
+
+        public static void ResizeVideo(
+         string inputVideoFilePath,
+         string outputVideoFilePath,
+         int width,int height)
+        {
+
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            
+            process.StartInfo.Arguments = "/C " + " ffmpeg  -y -i " +
+                inputVideoFilePath +
+                " -vf scale="+ width + "x"+ height + ",setsar=1 " +
+                outputVideoFilePath;
+
+            process.StartInfo.UseShellExecute = false;
+            process.Start();
+            process.WaitForExit();
+
+            int exitCode = process.ExitCode;
+            if (exitCode == 0)
+            {
+                Console.WriteLine("Creating Video From" +
+                    " Images completed successfully!");
+            }
+            else
+            {
+                Console.WriteLine($"FFmpeg processing " +
+                    $"failed with exit code: {exitCode}");
+            }
+        }
+
+        public static void ChangeAspectRatio(
+            string inputVideoFilePath,
+            string outputVideoFilePath)
+        {
+
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/C " + " ffmpeg  -y -i " +
+                inputVideoFilePath +
+                " -aspect 16:16  " +
+                outputVideoFilePath;
+
+            process.StartInfo.UseShellExecute = false;
+            process.Start();
+            process.WaitForExit();
+
+            int exitCode = process.ExitCode;
+            if (exitCode == 0)
+            {
+                Console.WriteLine("Creating Video From" +
+                    " Images completed successfully!");
+            }
+            else
+            {
+                Console.WriteLine($"FFmpeg processing " +
+                    $"failed with exit code: {exitCode}");
+            }
+        }
+
         public static void ConvertToImages(
             string inputVideoFilePath, 
             string outputFolder)
@@ -384,8 +603,8 @@ namespace Chapter_2
             int exitCode = process.ExitCode;
             if (exitCode == 0)
             {
-                Console.WriteLine("Creating Video From" +
-                    " Images completed successfully!");
+                Console.WriteLine("Converting Video to Images" +
+                    " completed successfully!");
             }
             else
             {
@@ -393,6 +612,7 @@ namespace Chapter_2
                     $"failed with exit code: {exitCode}");
             }
         }
+
         public static void ExtractAudioFromVideoFile(
             string inputVideoFilePath, 
             string outputFilePath)
@@ -412,8 +632,8 @@ namespace Chapter_2
             int exitCode = process.ExitCode;
             if (exitCode == 0)
             {
-                Console.WriteLine("Creating Video From" +
-                    " Images completed successfully!");
+                Console.WriteLine("Extracting audio from video" +
+                    "completed successfully!");
             }
             else
             {
@@ -442,8 +662,8 @@ namespace Chapter_2
             int exitCode = process.ExitCode;
             if (exitCode == 0)
             {
-                Console.WriteLine("Creating Video From" +
-                    " Images completed successfully!");
+                Console.WriteLine("Creating silent audio" +
+                    "completed successfully!");
             }
             else
             {
